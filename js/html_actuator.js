@@ -1,4 +1,5 @@
 function HTMLActuator() {
+  this.gridContainer    = document.querySelector(".grid-container");
   this.tileContainer    = document.querySelector(".tile-container");
   this.scoreContainer   = document.querySelector(".score-container");
   this.bestContainer    = document.querySelector(".best-container");
@@ -12,14 +13,20 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
 
   window.requestAnimationFrame(function () {
     self.clearContainer(self.tileContainer);
+    self.clearContainer(self.gridContainer);
 
-    grid.cells.forEach(function (column) {
-      column.forEach(function (cell) {
+    grid.containers.forEach(function (container) {
+      var gridCell = document.createElement('div');
+      self.setPosition(gridCell, container, -15);
+      self.applyClasses(gridCell, ['grid-cell']);
+      self.gridContainer.appendChild(gridCell);
+    });
+
+    grid.eachCell(function (x, y, cell) {
         if (cell) {
           self.addTile(cell);
         }
       });
-    });
 
     self.updateScore(metadata.score);
     self.updateBestScore(metadata.bestScore);
@@ -52,10 +59,11 @@ HTMLActuator.prototype.addTile = function (tile) {
   var wrapper   = document.createElement("div");
   var inner     = document.createElement("div");
   var position  = tile.previousPosition || { x: tile.x, y: tile.y };
-  var positionClass = this.positionClass(position);
+  
+  this.setPosition(wrapper, position, 0);
 
   // We can't use classlist because it somehow glitches when replacing classes
-  var classes = ["tile", "tile-" + tile.value, positionClass];
+  var classes = ["tile", "tile-" + tile.value];
 
   if (tile.value > 2048) classes.push("tile-super");
 
@@ -67,7 +75,7 @@ HTMLActuator.prototype.addTile = function (tile) {
   if (tile.previousPosition) {
     // Make sure that the tile gets rendered in the previous position first
     window.requestAnimationFrame(function () {
-      classes[2] = self.positionClass({ x: tile.x, y: tile.y });
+      self.setPosition(wrapper, tile, 0);
       self.applyClasses(wrapper, classes); // Update the position
     });
   } else if (tile.mergedFrom) {
@@ -88,6 +96,13 @@ HTMLActuator.prototype.addTile = function (tile) {
 
   // Put the tile on the board
   this.tileContainer.appendChild(wrapper);
+};
+
+HTMLActuator.prototype.setPosition = function (element, position, offset) {
+  element.style.webkitTransform =
+    "translate("+
+      (position.x * 121 + offset)+"px, "+
+      (position.y * 121 + offset)+"px)";
 };
 
 HTMLActuator.prototype.applyClasses = function (element, classes) {
