@@ -14,7 +14,7 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
   window.requestAnimationFrame(function () {
     self.clearContainer(self.tileContainer);
     self.clearContainer(self.gridContainer);
-
+    
     grid.containers.forEach(function (container) {
       var gridCell = document.createElement('div');
       self.setPosition(gridCell, container, -15);
@@ -23,10 +23,10 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
     });
 
     grid.eachCell(function (x, y, cell) {
-        if (cell) {
-          self.addTile(cell);
-        }
-      });
+      if (cell) {
+        self.addTile(cell);
+      }
+    });
 
     self.updateScore(metadata.score);
     self.updateBestScore(metadata.bestScore);
@@ -99,10 +99,12 @@ HTMLActuator.prototype.addTile = function (tile) {
 };
 
 HTMLActuator.prototype.setPosition = function (element, position, offset) {
-  element.style.webkitTransform =
-    "translate("+
-      (position.x * 121 + offset)+"px, "+
-      (position.y * 121 + offset)+"px)";
+  ['webkitTransform', 'mozTransform', 'transform'].forEach(function (property) {
+    element.style[property] =
+      "translate("+
+        (position.x * 121 + offset)+"px, "+
+        (position.y * 121 + offset)+"px)";
+  });
 };
 
 HTMLActuator.prototype.applyClasses = function (element, classes) {
