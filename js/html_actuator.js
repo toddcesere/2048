@@ -1,23 +1,43 @@
-function HTMLActuator() {
+function HTMLActuator(grid) {
   this.gridContainer    = document.querySelector(".grid-container");
   this.tileContainer    = document.querySelector(".tile-container");
   this.scoreContainer   = document.querySelector(".score-container");
   this.bestContainer    = document.querySelector(".best-container");
   this.messageContainer = document.querySelector(".game-message");
+  
+  this.gameContainer = document.querySelector('.game-container');
+  this.addCrossBrowserStyle(this.gameContainer, 'transition', '500ms ease-in-out');
+  var properties = this.crossBrowserPrefix(['Transform', 'Transform', 'transform']);
+  var values = ['-webkit-scale', '-moz-scale', 'scale'];
+  for (var i = 0; i < properties.length; i++) {
+    this.gameContainer.style[properties[i]] = values[i];
+  }
 
   this.score = 0;
+  this.grid = grid;
+  this.tileMargin = 15;
 }
 
-HTMLActuator.prototype.actuate = function (grid, metadata) {
+HTMLActuator.prototype.actuate = function (metadata) {
   var self = this;
+  var grid = self.grid;
+  var tileSize = self.tileSize();
+  var boundaries = this.grid.boundaries();
+  var height = boundaries.y.max - boundaries.y.min + 1;
 
   window.requestAnimationFrame(function () {
     self.clearContainer(self.tileContainer);
     self.clearContainer(self.gridContainer);
     
+    self.gameContainer.style.height = (height * (tileSize + self.tileMargin))+"px";
+    
     grid.containers.forEach(function (container) {
       var gridCell = document.createElement('div');
       self.setPosition(gridCell, container, -15);
+      
+      gridCell.style.width = tileSize+"px";
+      gridCell.style.height = tileSize+"px";
+      
       self.applyClasses(gridCell, ['grid-cell']);
       self.gridContainer.appendChild(gridCell);
     });
@@ -55,6 +75,7 @@ HTMLActuator.prototype.clearContainer = function (container) {
 
 HTMLActuator.prototype.addTile = function (tile) {
   var self = this;
+  var tileSize = this.tileSize();
 
   var wrapper   = document.createElement("div");
   var inner     = document.createElement("div");
@@ -63,12 +84,17 @@ HTMLActuator.prototype.addTile = function (tile) {
   this.setPosition(wrapper, position, 0);
 
   // We can't use classlist because it somehow glitches when replacing classes
-  var classes = ["tile", "tile-" + tile.value];
+  var classes = ["tile", "tile-"+tile.value];
 
   if (tile.value > 2048) classes.push("tile-super");
+  if (tile.expander) classes.push("tile-expander");
 
   this.applyClasses(wrapper, classes);
 
+  inner.style.width = tileSize+"px";
+  inner.style.height = tileSize+"px";
+  inner.style.fontSize = (tileSize / 2)+"px";
+  inner.style.lineHeight = (tileSize + 15 / 2)+"px";
   inner.classList.add("tile-inner");
   inner.textContent = tile.value;
 
@@ -99,13 +125,33 @@ HTMLActuator.prototype.addTile = function (tile) {
 };
 
 HTMLActuator.prototype.setPosition = function (element, position, offset) {
-  ['webkitTransform', 'mozTransform', 'transform'].forEach(function (property) {
-    element.style[property] =
-      "translate("+
-        (position.x * 121 + offset)+"px, "+
-        (position.y * 121 + offset)+"px)";
-  });
+  var tileSize = this.tileSize();
+  var boundaries = this.grid.boundaries();
+  var value = 
+    "translate("+
+      ((position.x - boundaries.x.min) * (tileSize + 15) + offset)+"px, "+
+      ((position.y - boundaries.y.min) * (tileSize + 15) + offset)+"px)";
+  this.addCrossBrowserStyle(element, 'transform', value);
 };
+
+HTMLActuator.prototype.addCrossBrowserStyle = function (element, property, value) {
+  var capitalized = property.charAt(0).toUpperCase()+property.slice(1);
+  this.crossBrowserPrefix([capitalized, capitalized, property]).forEach(function (fullProperty) {
+    element.style[fullProperty] = value;
+  });
+}
+
+HTMLActuator.prototype.crossBrowserPrefix = function (bases) {
+  return ['webkit'+bases[0], 'moz'+bases[1], ''+bases[2]];
+}
+
+HTMLActuator.prototype.tileSize = function () {
+  var boundaries = this.grid.boundaries();
+  var width = boundaries.x.max - boundaries.x.min + 1;
+  var height = boundaries.y.max - boundaries.y.min + 1;
+  size = (500 - 15) /(width > height ? width : height) - 15;
+  return size;
+}
 
 HTMLActuator.prototype.applyClasses = function (element, classes) {
   element.setAttribute("class", classes.join(" "));

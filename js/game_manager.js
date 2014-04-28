@@ -56,6 +56,7 @@ GameManager.prototype.setup = function () {
     this.addStartTiles();
   }
 
+  this.actuator.grid = this.grid;
   // Update the actuator
   this.actuate();
 };
@@ -94,7 +95,7 @@ GameManager.prototype.actuate = function () {
     this.storageManager.setGameState(this.serialize());
   }
 
-  this.actuator.actuate(this.grid, {
+  this.actuator.actuate({
     score:      this.score,
     over:       this.over,
     won:        this.won,

@@ -129,3 +129,20 @@ Grid.prototype.serialize = function () {
     containers: this.containers
   };
 };
+
+Grid.prototype.boundaries = function() {
+  var boundaries = {x: {min: 0, max: 0}, y: {min: 0, max: 0}};
+  this.eachCell(function (x, y, cell) {
+    [[x, 'x'], [y, 'y']].forEach(function(dimension) {
+      var boundary = boundaries[dimension[1]];
+      var position = dimension[0];
+      if (position < boundary.min) {
+        boundary.min = position;
+      }
+      if (position > boundary.max) {
+        boundary.max = position;
+      }
+    });
+  });
+  return boundaries;
+}
