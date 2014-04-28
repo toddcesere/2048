@@ -237,27 +237,11 @@ GameManager.prototype.getVector = function (direction) {
 // Build a list of positions to traverse in the right order
 GameManager.prototype.buildTraversals = function (vector) {
   var traversals = { x: [], y: [] };
-  var range
-  var min = {x: 0, y: 0};
-  var max = {x: 0, y: 0};
-  this.grid.eachCell(function (x, y, cell) {
-    if (x < min.x) {
-      min.x = x;
-    }
-    if (y < min.y) {
-      min.y = y;
-    }
-    if (x > max.x) {
-      max.x = x;
-    }
-    if (y > max.y) {
-      max.y = y;
-    }
-  });
-  for (var pos = min.x; pos < max.x + 1; pos++) {
+  var boundaries = this.grid.boundaries();
+  for (var pos = boundaries.x.min; pos <= boundaries.x.max; pos++) {
     traversals.x.push(pos);
   }
-  for (var pos = min.y; pos < max.y + 1; pos++) {
+  for (var pos = boundaries.y.min; pos <= boundaries.y.max; pos++) {
     traversals.y.push(pos);
   }
 
